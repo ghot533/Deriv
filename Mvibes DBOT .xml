@@ -1,0 +1,241 @@
+<xml xmlns="https://developers.google.com/blockly/xml">
+  <block type="variables_set" id="setup_balance" x="20" y="20">
+    <field name="VAR">saldo_conto</field>
+    <value name="VALUE">
+      <block type="math_number">
+        <field name="NUM">1000</field>
+      </block>
+    </value>
+    <next>
+      <block type="variables_set" id="setup_risk" x="20" y="60">
+        <field name="VAR">rischio_per_trade</field>
+        <value name="VALUE">
+          <block type="math_number">
+            <field name="NUM">0.01</field>
+          </block>
+        </value>
+        <next>
+          <block type="variables_set" id="setup_take_profit" x="20" y="100">
+            <field name="VAR">take_profit</field>
+            <value name="VALUE">
+              <block type="math_number">
+                <field name="NUM">0.05</field>
+              </block>
+            </value>
+            <next>
+              <block type="variables_set" id="setup_stop_loss" x="20" y="140">
+                <field name="VAR">stop_loss</field>
+                <value name="VALUE">
+                  <block type="math_number">
+                    <field name="NUM">0.02</field>
+                  </block>
+                </value>
+                <next>
+                  <block type="variables_set" id="load_data" x="20" y="180">
+                    <field name="VAR">dati</field>
+                    <value name="VALUE">
+                      <block type="text">
+                        <field name="TEXT">dati_prezzo.csv</field>
+                      </block>
+                    </value>
+                    <next>
+                      <block type="variables_set" id="setup_signals" x="20" y="220">
+                        <field name="VAR">segnali</field>
+                        <value name="VALUE">
+                          <block type="procedures_callreturn" inline="true">
+                            <mutation name="strategia_media_mobile">
+                              <arg name="dati"/>
+                            </mutation>
+                            <value name="ARG0">
+                              <block type="variables_get">
+                                <field name="VAR">dati</field>
+                              </block>
+                            </value>
+                          </block>
+                        </value>
+                        <next>
+                          <block type="controls_forEach" id="loop_signals" x="20" y="260">
+                            <field name="VAR">row</field>
+                            <value name="LIST">
+                              <block type="variables_get">
+                                <field name="VAR">segnali</field>
+                              </block>
+                            </value>
+                            <statement name="DO">
+                              <block type="controls_if" id="check_buy_signal">
+                                <value name="IF0">
+                                  <block type="logic_compare">
+                                    <field name="OP">EQ</field>
+                                    <value name="A">
+                                      <block type="variables_get">
+                                        <field name="VAR">row['posizioni']</field>
+                                      </block>
+                                    </value>
+                                    <value name="B">
+                                      <block type="math_number">
+                                        <field name="NUM">1.0</field>
+                                      </block>
+                                    </value>
+                                  </block>
+                                </value>
+                                <statement name="DO0">
+                                  <block type="variables_set" id="calculate_position_size">
+                                    <field name="VAR">dimensione_posizione</field>
+                                    <value name="VALUE">
+                                      <block type="math_arithmetic">
+                                        <field name="OP">MULTIPLY</field>
+                                        <value name="A">
+                                          <block type="variables_get">
+                                            <field name="VAR">saldo_conto</field>
+                                          </block>
+                                        </value>
+                                        <value name="B">
+                                          <block type="variables_get">
+                                            <field name="VAR">rischio_per_trade</field>
+                                          </block>
+                                        </value>
+                                      </block>
+                                    </value>
+                                    <next>
+                                      <block type="variables_set" id="set_entry_price">
+                                        <field name="VAR">prezzo_ingresso</field>
+                                        <value name="VALUE">
+                                          <block type="variables_get">
+                                            <field name="VAR">row['prezzo']</field>
+                                          </block>
+                                        </value>
+                                        <next>
+                                          <block type="variables_set" id="apply_risk_management">
+                                            <field name="VAR">prezzo_tp, prezzo_sl</field>
+                                            <value name="VALUE">
+                                              <block type="procedures_callreturn" inline="true">
+                                                <mutation name="applica_gestione_rischio">
+                                                  <arg name="ingresso_trade"/>
+                                                  <arg name="take_profit"/>
+                                                  <arg name="stop_loss"/>
+                                                </mutation>
+                                                <value name="ARG0">
+                                                  <block type="variables_get">
+                                                    <field name="VAR">prezzo_ingresso</field>
+                                                  </block>
+                                                </value>
+                                                <value name="ARG1">
+                                                  <block type="variables_get">
+                                                    <field name="VAR">take_profit</field>
+                                                  </block>
+                                                </value>
+                                                <value name="ARG2">
+                                                  <block type="variables_get">
+                                                    <field name="VAR">stop_loss</field>
+                                                  </block>
+                                                </value>
+                                              </block>
+                                            </value>
+                                            <next>
+                                              <block type="variables_set" id="execute_trade">
+                                                <field name="VAR">response</field>
+                                                <value name="VALUE">
+                                                  <block type="procedures_callreturn" inline="true">
+                                                    <mutation name="esegui_trade">
+                                                      <arg name="simbolo"/>
+                                                      <arg name="lato"/>
+                                                      <arg name="quantita"/>
+                                                    </mutation>
+                                                    <value name="ARG0">
+                                                      <block type="text">
+                                                        <field name="TEXT">BTCUSD</field>
+                                                      </block>
+                                                    </value>
+                                                    <value name="ARG1">
+                                                      <block type="text">
+                                                        <field name="TEXT">buy</field>
+                                                      </block>
+                                                    </value>
+                                                    <value name="ARG2">
+                                                      <block type="variables_get">
+                                                        <field name="VAR">dimensione_posizione</field>
+                                                      </block>
+                                                    </value>
+                                                  </block>
+                                                </value>
+                                                <next>
+                                                  <block type="text_print" id="print_trade">
+                                                    <value name="TEXT">
+                                                      <block type="variables_get">
+                                                        <field name="VAR">response</field>
+                                                      </block>
+                                                    </value>
+                                                    <next>
+                                                      <block type="controls_whileUntil" id="monitor_trade">
+                                                        <field name="MODE">WHILE</field>
+                                                        <value name="BOOL">
+                                                          <block type="logic_boolean">
+                                                            <field name="BOOL">TRUE</field>
+                                                          </block>
+                                                        </value>
+                                                        <statement name="DO">
+                                                          <block type="variables_set" id="current_price">
+                                                            <field name="VAR">prezzo_corrente</field>
+                                                            <value name="VALUE">
+                                                              <block type="procedures_callreturn" inline="true">
+                                                                <mutation name="get_current_price">
+                                                                  <arg name="simbolo"/>
+                                                                </mutation>
+                                                                <value name="ARG0">
+                                                                  <block type="text">
+                                                                    <field name="TEXT">BTCUSD</field>
+                                                                  </block>
+                                                                </value>
+                                                              </block>
+                                                            </value>
+                                                            <next>
+                                                              <block type="controls_if" id="check_tp_sl">
+                                                                <value name="IF0">
+                                                                  <block type="logic_compare">
+                                                                    <field name="OP">GTE</field>
+                                                                    <value name="A">
+                                                                      <block type="variables_get">
+                                                                        <field name="VAR">prezzo_corrente</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <value name="B">
+                                                                      <block type="variables_get">
+                                                                        <field name="VAR">prezzo_tp</field>
+                                                                      </block>
+                                                                    </value>
+                                                                  </block>
+                                                                </value>
+                                                                <statement name="DO0">
+                                                                  <block type="text_print" id="print_tp">
+                                                                    <value name="TEXT">
+                                                                      <block type="text">
+                                                                        <field name="TEXT">Take profit raggiunto!</field>
+                                                                      </block>
+                                                                    </value>
+                                                                    <next>
+                                                                      <block type="variables_set" id="update_balance_tp">
+                                                                        <field name="VAR">saldo_conto</field>
+                                                                        <value name="VALUE">
+                                                                          <block type="math_arithmetic">
+                                                                            <field name="OP">ADD</field>
+                                                                            <value name="A">
+                                                                              <block type="variables_get">
+                                                                                <field name="VAR">saldo_conto</field>
+                                                                              </block>
+                                                                            </value>
+                                                                            <value name="B">
+                                                                              <block type="math_arithmetic">
+                                                                                <field name="OP">MULTIPLY</field>
+                                                                                <value name="A">
+                                                                                  <block type="variables_get">
+                                                                                    <field name="VAR">dimensione_posizione</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                                <value name="B">
+                                                                                  <block type="variables_get">
+                                                                                    <field name="VAR">take_profit</field>
+                                                                                  </block>
+                                                                                </value>
+                                                                              </block>
+                                                                            </value>
+                                                                          </block>
